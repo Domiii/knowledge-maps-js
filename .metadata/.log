@@ -1,0 +1,12 @@
+!SESSION 2014-01-12 20:30:52.066 -----------------------------------------------
+eclipse.buildId=3.5.0.201401092130
+java.version=1.6.0_24
+java.vendor=Sun Microsystems Inc.
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86
+
+!ENTRY org.eclipse.e4.ui.css.core 4 0 2014-01-12 20:30:59.761
+!MESSAGE CSS property 'maximize-visible' has been deprecated: renamed as swt-maximize-visible
+
+!ENTRY org.eclipse.e4.ui.css.core 4 0 2014-01-12 20:30:59.761
+!MESSAGE CSS property 'minimize-visible' has been deprecated: renamed as swt-minimize-visible
