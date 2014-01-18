@@ -62,6 +62,9 @@ squishy.Graph = function(config) {
         arc.from = fromIdx;
         arc.to = toIdx;
         
+        squishy.assert(fromNode, "from node #" + arc.from + " does not exist.");
+        squishy.assert(toNode, "to node #" + arc.to + " does not exist.");
+        
         // add arcs to nodes
         fromNode.arcsOut.push(arc);
         toNode.arcsIn.push(arc);

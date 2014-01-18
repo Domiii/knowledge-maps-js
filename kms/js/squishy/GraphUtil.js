@@ -12,15 +12,16 @@
 /**
  * Initializes and returns the state object used in GraphBFSNodes.
  */
-squishy.Graph.prototype.BFSNodesInit = function() {
-    var nNodes = this.nodes.length;     // number of nodes
+squishy.Graph.prototype.BFSNodesInit = function(visited, fringe) {
     var state = {
-        visited : squishy.createArray(nNodes, false),
-        fringe : [this.Root]
+        visited : visited || squishy.createArray(this.nodes.length, false),
+        fringe : fringe || [this.Root]
     };
     
-    // mark root as visited, in case this graph has cycles
-    state.visited[this.Root.nodeindex] = true;
+    // mark fringe as visited, in case this graph has cycles
+    for (var iFringe = 0; iFringe < state.fringe.length; ++iFringe) {
+    	state.visited[state.fringe[iFringe].nodeindex] = true;	
+    }
     return state;
 };
 
@@ -40,6 +41,7 @@ squishy.Graph.prototype.BFSNodes = function(visitFunc, graphBFSState) {
     
     var headIdx = 0;
     var tailIdx = -1;
+    
     do {
         var nextNode = fringe[++tailIdx];                   // dequeue next node
         
@@ -68,10 +70,10 @@ squishy.Graph.prototype.BFSNodes = function(visitFunc, graphBFSState) {
 /**
  * Initializes and returns the state object used in GraphBFSArcs.
  */
-squishy.Graph.prototype.BFSArcsInit = function() {
+squishy.Graph.prototype.BFSArcsInit = function(visited, fringe) {
     var state = {
-        visited : squishy.createArray(this.narccount, false),
-        fringe : [this.Root]
+        visited : visited || squishy.createArray(this.narccount, false),
+        fringe : fringe || [this.Root]
     };
     
     // mark root as visited, in case this graph has cycles
@@ -97,11 +99,12 @@ squishy.Graph.prototype.BFSArcs = function(visitFunc, graphBFSState) {
     
     var headIdx = 0;
     var tailIdx = -1;
-    do {
+    while (tailIdx < headIdx) {
         var nextNode = fringe[++tailIdx];                   // dequeue next node
         
         // replace arc with outgoing arcs of "to" node
         var childArcs = nextNode.arcsOut;
+        
         for (var j = 0; j < childArcs.length; ++j) {
             var childArc = childArcs[j];
             if (visited[childArc.arcid]) continue;
@@ -112,5 +115,20 @@ squishy.Graph.prototype.BFSArcs = function(visitFunc, graphBFSState) {
                 fringe[++headIdx] = this.nodes[childArc.to];
             }
         }
-    } while (tailIdx < headIdx);
+    }
+};
+
+/**
+ * Log all arcs to console. 
+ */
+squishy.Graph.prototype.logArcs = function(msg) {
+	console.log("==============");
+	console.log("All arcs (" + msg + "):");
+    for (var i = 0; i < this.arcs.length; ++i) {
+    	var arc = this.arcs[i];
+    	var from = this.nodes[arc.from];
+    	var to = this.nodes[arc.to];
+        
+        console.log("[" + arc.from + "] -> " + "[" + arc.to + "] -- " + (to.rank - from.rank));
+    }
 };

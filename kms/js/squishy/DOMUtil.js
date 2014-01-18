@@ -1,8 +1,65 @@
+"use strict";
+
 /**
  * 
  * This file contains a collection of utilities for DOM manipulation, management and rendering.
  * 
  */
+
+
+// ##############################################################################################################
+// Special rendering tricks
+
+/**
+ * Adds a new div, representing a line from from to to, to the given container.
+ * 
+ * @param {Element} container The container that the line div should be added to.
+ * @param {Array.<Number, Number>} from x and y coordinates of first point.
+ * @param {Array.<Number, Number>} from x and y coordinates of second point.
+ * @param {Color=} color The color of the line. (Default = black)
+ * @param {Number=} width The stroke width of the line in pixels. (Default = 1)
+ */
+squishy.drawLine = function(container, from, to, color, width) {
+	
+	// TODO:  Fix lines from right top to left bottom
+	
+	var ax = from[0];
+	var ay = from[1];
+	var bx = to[0];
+	var by = to[1];
+    
+    // re-order, so we always operate in a problem-free quadrant
+    if (ax > bx) {
+        var _ax = ax;
+        ax = bx;
+        bx = _ax;
+    }
+    if (ay > by) {
+        var _ay = ay;
+        ay = by;
+        by = _ay;
+    }   
+    
+    // set defaults
+    color = color || "black";
+    width = width || 1;
+    
+    var angle=Math.atan((by-ay)/(bx-ax));
+    angle=angle*180/Math.PI;
+    var length=Math.sqrt((ax-bx)*(ax-bx)+(ay-by)*(ay-by));
+    var div = document.createElement("div");
+    div.style.cssText = 
+    	"height:" + width + "px;width:" + length + "px;background-color:" + color + ";position:absolute;top:" + (ay) + "px;left:" + (ax) + "px;" +
+    	"transform:rotate(" + angle + "deg);" +
+    	"-ms-transform:rotate(" + angle + "deg);transform-origin:0% 0%;" +
+    	"-moz-transform:rotate(" + angle + "deg);" +
+    	"-moz-transform-origin:0% 0%;-webkit-transform:rotate(" + angle  + "deg);" + 
+    	"-webkit-transform-origin:0% 0%;-o-transform:rotate(" + angle + "deg);-o-transform-origin:0% 0%;";
+    	
+    	
+    container.appendChild(div);
+   	return div;
+};
  
  
 
@@ -69,7 +126,7 @@ squishy.getDOMText = function(element) {
 squishy.getTextWidth = function(text, font) {
     // if given, use cached canvas for better performance
     // else, create new canvas
-    canvas = squishy.getTextWidth.canvas || (squishy.getTextWidth.canvas = document.createElement("canvas"));
+    var canvas = squishy.getTextWidth.canvas || (squishy.getTextWidth.canvas = document.createElement("canvas"));
     var context = canvas.getContext("2d");
     context.font = font;
     var metrics = context.measureText(text);
@@ -81,8 +138,8 @@ squishy.getTextWidth = function(text, font) {
  * Traverses the DOM of the given targetElement and makes sure that the text of all it's ancestor elements fits.
  */
 squishy.truncateElementTexts = function(targetElement, font, ellipsis) {
-    
-}
+    // TODO:
+};
 
 /**
  * Returns text whose display width does not exceed the given maxPixelsWidth (in pixels).
@@ -102,7 +159,6 @@ squishy.truncateElementTexts = function(targetElement, font, ellipsis) {
  */
 squishy.truncateText = function(text, font, maxPixelsWidth, targetElement, ellipsis) {
     // TODO: Use binary search & heuristics to speed up the process for very long text
-    var width;
     if (targetElement) {
         // subtract padding, margin & border from max pixel width
         var jqEl = $(targetElement);
@@ -110,6 +166,7 @@ squishy.truncateText = function(text, font, maxPixelsWidth, targetElement, ellip
     }
     ellipsis = ellipsis || "...";
     
+    var width;
     var len = text.length;
     while ((width = squishy.getTextWidth(text, font)) > maxPixelsWidth) {
         --len;
