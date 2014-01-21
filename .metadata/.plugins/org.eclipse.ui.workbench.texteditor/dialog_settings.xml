@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item value="true" key="wrap"/>
+		<item value="false" key="casesensitive"/>
+		<item value="false" key="isRegEx"/>
+		<item value="false" key="wholeword"/>
+		<item value="arra" key="selection"/>
+		<list key="findhistory">
+			<item value="arra"/>
+			<item value="shuffle"/>
+			<item value="this.nodes"/>
+			<item value="this.nodes ="/>
+			<item value="rank ="/>
+			<item value="this.NRankMax"/>
+			<item value="leastAdjacentArcSlack"/>
+			<item value="computeFea"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.GotoLineAction$GotoLineDialog_dialogBounds">
+		<item value="406" key="DIALOG_Y_ORIGIN"/>
+		<item value="645" key="DIALOG_X_ORIGIN"/>
+	</section>
+</section>

@@ -255,8 +255,8 @@ squishy.extractFolder = function(path) {
       return this.slice();
 
     return merge(
-      this.slice(0, middle).msort(compare),
-      this.slice(middle, length).msort(compare),
+      this.slice(0, middle).stableSort(compare),
+      this.slice(middle, length).stableSort(compare),
       compare
     );
     
