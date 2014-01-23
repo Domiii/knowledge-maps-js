@@ -6,6 +6,8 @@
 // See: https://developers.google.com/closure/compiler/docs/js-for-compiler
 
 
+// TODO: Don't let nodes overlap
+// TODO: Improve layout
 
 // ####################################################################################################
 // Directed graph layout algorithm
@@ -15,9 +17,10 @@
  */
 squishy.Graph.prototype.computeLayout = function() {
     this.computeRanks();
-    var virtualMap = this.createVirtualGraph();
-    var ordering = virtualMap.computeInRankOrder();
-    return virtualMap.computeInRankPosition(ordering);
+    //var virtualMap = this.createVirtualGraph();
+    var virtualMap = this;
+    virtualMap.computeInRankOrder();
+    return virtualMap.computeInRankPosition();
 };
 
 
@@ -58,28 +61,33 @@ squishy.Graph.prototype.computeRanksGreedily = function() {
     this.initRanks();
 	
 	// visitor function that moves the rank of every node down by the given amount of slack
-	var visitorFactory = function(_this, delta) {
+	var visitorFactory = function(_this) {
 		return function (arc) {
-			var toNode = _this.nodes[arc.to];
-			toNode.rank += delta;
-			_this.NRankMax = Math.max(_this.NRankMax, toNode.rank);
+            var slack = this.arcGetSlack(arc);
+            if (slack < 0) {
+                var toNode = _this.nodes[arc.to];
+                toNode.rank -= slack;
+                _this.NRankMax = Math.max(_this.NRankMax, toNode.rank);
+            }
 			return true;
 		};
 	};
     
-    // iterate over all arcs
-    for (var iArc = 0; iArc < this.arcs.length; ++iArc) {
-    	var arc = this.arcs[iArc];
-    	
+    // iterate over all arcs in BF order
+    this.BFSArcs(function(arc) {
+        //console.log("visited arc: " + arc.from + " -> " + arc.to);
     	var slack = this.arcGetSlack(arc);
     	
     	if (slack < 0) {
-    		// move sub-graph down by one
     		var fromNode = this.nodes[arc.from];
-    		var bfsState = this.BFSNodesInit([], [fromNode]);
-    		this.BFSNodes(visitorFactory(this, -slack), bfsState);
+            var toNode = this.nodes[arc.to];
+            
+            // re-check sub-graph
+            var bfsState = this.BFSArcsInit([fromNode]);
+            this.BFSArcs(visitorFactory(this), bfsState);
     	}
-    }
+        return true;
+    });
 };
 
 // /**
@@ -194,8 +202,7 @@ squishy.Graph.prototype.createVirtualGraph = function() {
         var arc = this.arcs[j];
         var arcLen = this.arcGetLen(arc);
         
-        
-        squishy.assert(arcLen >= 0, "Arc length is negative => Rank computation is bugged.");
+        squishy.assert(arcLen >= this.layout.arcMinLength, "Slack is negative => Rank computation is bugged.");
         
         if (arcLen > 1) {
             // insert (len-1) virtual nodes
@@ -231,13 +238,14 @@ squishy.Graph.prototype.createVirtualGraph = function() {
 squishy.Graph.prototype.computeInRankOrder = function() {
     // First do a BFS for an initial ordering.
     // Returns "ranks" array and adds the "order" property to every node.
-    var ranks = squishy.createArray(this.NRankMax+1, []);     // one array per rank
+    var ranks = this.ranks = squishy.createArray(this.NRankMax+1, []);     // one array per rank
     var _this = this;
     
     // add root
     this.Root.order = 0;
     ranks[0].push(this.Root);
     
+    // get all ranks of nodes, and assign preliminary order
     this.BFSNodes(function(nextArc) {
         var node = _this.nodes[nextArc.to];
         var nodesInRank = ranks[node.rank];
@@ -246,7 +254,7 @@ squishy.Graph.prototype.computeInRankOrder = function() {
         return true;
     });
     
-    // compare order of two parents
+    // compare nodes by order
     var compareFun = function(left, right) {
         if (left.order < right.order) return -1;
         else if (left.order == right.order) return 0;
@@ -258,7 +266,7 @@ squishy.Graph.prototype.computeInRankOrder = function() {
     // TODO: Iteratively perform local swaps, and switch up/down <-> down/up directions between iterations.
     for (var nRanks = this.NRankMax, i = 1; i <= nRanks; ++i) {
         var nodesInRank = ranks[i];
-        for (var rankSize = nodesInRank.length, j = 1; j < rankSize; ++j) {
+        for (var rankSize = nodesInRank.length, j = 0; j < rankSize; ++j) {
             var node = nodesInRank[j];
             // sort the parents
             var sortedParents = node.arcsIn.stableSort(compareFun);
@@ -274,7 +282,6 @@ squishy.Graph.prototype.computeInRankOrder = function() {
         // re-compute in-rank ordering
         ranks[i] = nodesInRank.stableSort(compareFun);
     }
-    return ranks;
 };
 
 
@@ -291,22 +298,58 @@ squishy.Graph.prototype.computeInRankOrder = function() {
  * 
  * @return An array of {x, y}, indicating the top-left position of each node.
  */
-squishy.Graph.prototype.computeInRankPosition = function(ranks, canvas) {
+squishy.Graph.prototype.computeInRankPosition = function() {
+    // compute preliminary positions
+    var ranks = this.ranks;
     var positions = [];
-    var y = 0;
+    var y = this.layout.nodeSeparation.y;
+    
+    // compare nodes by order
+    var compareFun = function(left, right) {
+        if (left.order < right.order) return -1;
+        else if (left.order == right.order) return 0;
+        return 1;
+    };
+    
     for (var i = 0; i < ranks.length; ++i) {
-        var x = 0;
+        var x = this.layout.nodeSeparation.x;
         var rankNodes = ranks[i];
         for (var j = 0; j < rankNodes.length; ++j) {
             var node = rankNodes[j];
             
-            x += this.layout.nodeSizeMax.x + this.layout.nodeSeparation.x;
-            
-            if (!node.virtual)
+            //if (!node.virtual) {
             	positions[node.nodeindex] = [ x, y ];
+                x += this.layout.nodeSizeMax.x + this.layout.nodeSeparation.x;
+            //}
         }
         y += this.layout.nodeSizeMax.y + this.layout.nodeSeparation.y;
     }
+    
+    // improve position result
+    for (var nRanks = this.NRankMax, i = 0; i <= nRanks-1; ++i) {
+        var nodesInRank = ranks[i];
+        for (var rankSize = nodesInRank.length, j = 0; j < rankSize; ++j) {
+            var node = nodesInRank[j];
+            if (node.arcsOut.length == 0) continue;
+            
+            // sort the children
+            var sortedOut = node.arcsOut.stableSort(compareFun);
+            
+            // TODO: Interpolation, in case there are multiple medians.
+            
+            // update order value based on parent order value
+            var medianArc = sortedOut[Math.floor(sortedOut.length/2)];
+            var medianNode = this.nodes[medianArc.to];
+            //if (!node.virtual) {
+            positions[node.nodeindex][0] = positions[medianNode.nodeindex][0];
+            //console.log(positions[medianNode.nodeindex][0]);
+            //}
+        }
+        
+        // re-compute in-rank ordering
+        ranks[i] = nodesInRank.stableSort(compareFun);
+    }
+    
     return positions;
 };
 

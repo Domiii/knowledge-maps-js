@@ -87,6 +87,13 @@ squishy.createArray = function(size, defaultVal) {
     return arr;
 };
 
+/**
+ * @see http://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array-in-javascript
+ */
+Array.prototype.shuffle = function() {
+    for(var j, x, i = this.length; i; j = Math.floor(Math.random() * i), x = this[--i], this[i] = this[j], this[j] = x);
+};
+
 
 // ##############################################################################################################
 // Object

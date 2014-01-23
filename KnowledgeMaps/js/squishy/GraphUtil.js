@@ -12,7 +12,7 @@
 /**
  * Initializes and returns the state object used in GraphBFSNodes.
  */
-squishy.Graph.prototype.BFSNodesInit = function(visited, fringe) {
+squishy.Graph.prototype.BFSNodesInit = function(fringe, visited) {
     var state = {
         visited : visited || squishy.createArray(this.nodes.length, false),
         fringe : fringe || [this.Root]
@@ -54,7 +54,7 @@ squishy.Graph.prototype.BFSNodes = function(visitFunc, graphBFSState) {
             if (visited[childArc.to]) continue;
             visited[childArc.to] = true;         // flag as visited
             
-            if (visitFunc(childArc)) {
+            if (visitFunc.call(this, childArc)) {
                 // keep visiting
                 fringe[++headIdx] = this.nodes[childArc.to];
             }
@@ -70,7 +70,7 @@ squishy.Graph.prototype.BFSNodes = function(visitFunc, graphBFSState) {
 /**
  * Initializes and returns the state object used in GraphBFSArcs.
  */
-squishy.Graph.prototype.BFSArcsInit = function(visited, fringe) {
+squishy.Graph.prototype.BFSArcsInit = function(fringe, visited) {
     var state = {
         visited : visited || squishy.createArray(this.narccount, false),
         fringe : fringe || [this.Root]
@@ -110,7 +110,7 @@ squishy.Graph.prototype.BFSArcs = function(visitFunc, graphBFSState) {
             if (visited[childArc.arcid]) continue;
             visited[childArc.arcid] = true;             // flag as visited
             
-            if (visitFunc(childArc)) {
+            if (visitFunc.call(this, childArc)) {
                 // keep visiting
                 fringe[++headIdx] = this.nodes[childArc.to];
             }

@@ -20,36 +20,28 @@
  * @param {Number=} width The stroke width of the line in pixels. (Default = 1)
  */
 squishy.drawLine = function(container, from, to, color, width) {
-	
-	// TODO:  Fix lines from right top to left bottom
-	
 	var ax = from[0];
 	var ay = from[1];
 	var bx = to[0];
 	var by = to[1];
     
-    // re-order, so we always operate in a problem-free quadrant
-    if (ax > bx) {
-        var _ax = ax;
-        ax = bx;
-        bx = _ax;
-    }
-    if (ay > by) {
-        var _ay = ay;
-        ay = by;
-        by = _ay;
-    }   
-    
     // set defaults
     color = color || "black";
     width = width || 1;
     
-    var angle=Math.atan((by-ay)/(bx-ax));
+    // compute counter-clockwise angle from the positive x-axis (in radians)
+    var angle = Math.atan2(by-ay, bx-ax);
+    
+    // convert to degrees
     angle=angle*180/Math.PI;
+    //console.log(color + " -- angle: " + angle);
+    
     var length=Math.sqrt((ax-bx)*(ax-bx)+(ay-by)*(ay-by));
     var div = document.createElement("div");
     div.style.cssText = 
-    	"height:" + width + "px;width:" + length + "px;background-color:" + color + ";position:absolute;top:" + (ay) + "px;left:" + (ax) + "px;" +
+    	"height:" + width + "px;width:" + length + "px;background-color:" + color + ";position:absolute;top:" + (ay) + "px;left:" + (ax) + "px;";
+    
+    div.style.cssText +=
     	"transform:rotate(" + angle + "deg);" +
     	"-ms-transform:rotate(" + angle + "deg);transform-origin:0% 0%;" +
     	"-moz-transform:rotate(" + angle + "deg);" +
@@ -61,6 +53,20 @@ squishy.drawLine = function(container, from, to, color, width) {
    	return div;
 };
  
+// ##############################################################################################################
+// Transforms
+
+/**
+ * @see http://www.w3schools.com/css/css3_2dtransforms.asp
+ */
+squishy.transformScale = function(targetEl, factorX, factorY) {
+    var cssString = "scale(" + factorX + ", " + factorY + ")";
+    var fullCSSString = " transform:" + cssString;
+    fullCSSString += "-ms-transform:" + cssString;   /* IE 9 */
+    fullCSSString += "-webkit-transform:" + cssString;  /* Safari and Chrome */
+    
+    targetEl.style.cssText += fullCSSString;
+}
  
 
 // ##############################################################################################################
@@ -217,6 +223,31 @@ squishy.loadImage = function(src, callback) {
 //     //     console.log( textStatus );
 //     //   })
 // };
+
+// ##############################################################################################################
+// CSS pretty stuff
+
+/**
+ * Adds shadow to the given element.
+ *
+ * @see http://css3gen.com/box-shadow/
+ * 
+ * @param {Element} targetEl
+ * @param {Number} thicknessPx
+ * @param {String=} color (default = "gray")
+ * @param {Number=} blurPx (default = 10)
+ * @param {Number=} spreadPx (default = 0)
+ */
+squishy.addShadow = function(targetEl, thicknessPx, color, blurPx, spreadPx) {
+    color = color || "gray";
+    blurPx = blurPx || 10;
+    spreadPx = spreadPx || 0;
+    var shadowString = thicknessPx + "px " + thicknessPx + "px " + blurPx + "px " + spreadPx + "px " + color;
+    var fullShadowString = "box-shadow: " + shadowString + ";";
+    fullShadowString += "-webkit-box-shadow: " + shadowString + ";";
+    fullShadowString += "-moz-box-shadow: " + shadowString + ";";
+    targetEl.style.cssText += fullShadowString;
+};
 
 
 // ##############################################################################################################

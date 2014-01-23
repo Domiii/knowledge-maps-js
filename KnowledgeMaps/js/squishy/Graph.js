@@ -24,10 +24,13 @@
  *  font = CSS font style (e.g. "bold 12pt arial")
  *
  * node properties:
- *  nodeid, title, htmlInfo
+ *  nodeid, title, htmlInfo, tags
  * 
  * arc properties:
  *  arcid, from, to, weight
+ *
+ * other properties:
+ *   allTags
  *
  * new per-node properties: 
  *  node.rank = rank of node (y)
@@ -36,7 +39,9 @@
  */ 
 squishy.Graph = function(config) {
     config.clone(false, this);               // shallow-copy all properties from data to this
+    
     this.Root = this.nodes[0];
+    this.allTagString = this.allTags.join(",");
     
     // change nodeid references in arcs (arc.to and arc.from) to use indices instead.
     var nodeId2Index = {};
@@ -45,6 +50,7 @@ squishy.Graph = function(config) {
         node.nodeindex = i;
         node.arcsIn = [];
         node.arcsOut = [];
+        node.tagString = node.tags.join(",");
         nodeId2Index[node.nodeid] = i;
     }
     
@@ -69,6 +75,8 @@ squishy.Graph = function(config) {
         fromNode.arcsOut.push(arc);
         toNode.arcsIn.push(arc);
     }
+    
+    //this.logArcs("ctor");
 };
 
 

@@ -3,7 +3,7 @@
  * Note: Requires JQuery.
  */
 
-goog.provide("squishy.UI");
+squishy.UI = {};
 
 /**
  * The MapView uses clipping to only display a small part of a of a zoomable and scrollable map DOM element 
@@ -12,7 +12,6 @@ goog.provide("squishy.UI");
  * @param {Object} config The MapView component and settings.
  * @param {Element} [config.map] The underlying DOM element of the map.
  * @param {Element} [config.viewPort] The underlying DOM element of the viewPort (must contain map).
- * @param {Element} [config.mapSize] The total size of the map.
  * @param {Array.<Number, Number>} [config.viewPortPosition] A 2D array, representing the current top and left px coordinates of the viewPort, relative to the map.
  */
 squishy.UI.MapView = function(config) {
@@ -34,10 +33,6 @@ squishy.UI.MapView = function(config) {
     
     // initialize position and clipping  of the map element
     this.moveTo(config.viewPortPosition);
-    
-    // intermediate state:
-    this.dragAnchor = { active : 0, pos : [0,0], time : 0 };
-    this.lastDelta = [0, 0];
     
     // initialize event handlers etc.
     this.initMap();
@@ -79,8 +74,8 @@ squishy.UI.MapView.prototype.updateViewPort = function() {
     /** @const */ var minX = 0;
     /** @const */ var minY = 0;
     
-    var width = this.mapSize[0];
-    var height = this.mapSize[1];
+    var width = this.map.offsetWidth;
+    var height = this.map.offsetHeight;
     var viewWidth = this.viewPort.offsetWidth;
     var viewHeight = this.viewPort.offsetHeight;
     
@@ -115,6 +110,11 @@ squishy.UI.MapView.prototype.updateViewPort = function() {
  * @private
  */
 squishy.UI.MapView.prototype.initMap = function() {
+    // intermediate state:
+    this.dragAnchor = { active : 0, pos : [0,0], time : 0 };
+    this.lastDelta = [0, 0];
+    
+    // add event listeners
     (function() {
     	var _this = this;
     	
