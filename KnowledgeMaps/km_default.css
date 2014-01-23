@@ -1,0 +1,66 @@
+/**
+ * Map:
+ */
+ 
+
+#km_map {
+    /* the map itself */
+    
+}
+ 
+
+/**
+ * Nodes:
+ */
+
+.km_node_cont {
+    /* node container */
+    padding:5px;
+}
+
+.km_node {
+    /* node buttons */
+}
+
+.km_node_selected {
+    /* selected node */
+    background-color:SpringGreen
+}
+
+.km_node_filtered {
+    /* nodes who match the current filter (e.g. tags) */
+    border-width : 3px;
+    border-color : DarkRed;
+    border-style : solid;
+}
+
+.km_node_notfiltered {
+    /* nodes who match do not match the current filter */
+    
+}
+
+
+/**
+ * Tags:
+ */
+
+.km_tag {
+    /* tags */
+    margin : 2px;
+    padding-left : 2px;
+    padding-right : 2px;
+    /*border-width : 1px;
+    border-style : solid;*/
+}
+
+.km_tag_selected {
+    /* selected tag */
+    background-color:red
+}
+
+.km_tag_box {
+    /* box containing tags */
+    border-width:1px;
+    border-style:solid;
+    padding : 5px;
+}

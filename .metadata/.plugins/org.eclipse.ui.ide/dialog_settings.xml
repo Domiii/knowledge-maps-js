@@ -13,6 +13,22 @@
 		<item value="org.eclipse.rcp:4.3.1.v20130911-1000"/>
 		<item value="org.radrails.rails:3.4.2.1384555483-7n-7Z7oKnWpwmSjj"/>
 	</list>
+	<section name="ExternalProjectImportWizard">
+		<item value="false" key="WizardProjectsImportPage.STORE_ARCHIVE_SELECTED"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_COPY_PROJECT_ID"/>
+		<item value="false" key="WizardProjectsImportPage.STORE_NESTED_PROJECTS"/>
+		<list key="WizardProjectsImportPage.STORE_DIRECTORIES">
+			<item value="d:\code\knowledge-maps-js\KnowledgeMaps\"/>
+		</list>
+		<list key="WizardProjectsImportPage.STORE_ARCHIVES">
+			<item value=""/>
+		</list>
+	</section>
 	<section name="NewWizardAction">
+		<item value="com.aptana.ui.wizards.NewWebProject" key="NewWizardSelectionPage.STORE_SELECTED_ID"/>
+		<list key="NewWizardSelectionPage.STORE_EXPANDED_CATEGORIES_ID">
+			<item value="com.aptana.ui.wizards.category"/>
+			<item value="org.eclipse.ui.Other"/>
+		</list>
 	</section>
 </section>

@@ -1,0 +1,30 @@
+TODO:
+	- Map zoom
+	- Jump to node
+	- Jump to region (e.g. all currently filtered nodes)
+	- Continued scrolling (take velocity from most recent mouse movement and damp over time)
+	- Correct in-rank ordering: Simplex Network Algorithm
+	- Node states
+		- None
+		- Seen
+		- Done
+		- Edited
+	- More node info
+		- authors
+		<FIELD NAME="materialtype" TYPE="text" NOTNULL="true" COMMENT="Something like: Video, Book reading, Blog reading, Exercise, etc."/>
+        <FIELD NAME="infohtml" TYPE="text" NOTNULL="true" COMMENT="HTML summary & intentions/goals of the material associated with this node."/>
+        <FIELD NAME="language" TYPE="text" NOTNULL="true" ENUM="true" DEFAULT="en" ENUMVALUES="'en', 'zh', 'both'"/>
+        <FIELD NAME="subtitlelanguage" TYPE="text" NOTNULL="true" ENUM="true" DEFAULT="none" ENUMVALUES="'none', 'en', 'zh', 'both'"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+	- Editing
+		- Recompute graph after editing
+		- Add node
+		- Add arc
+		- Show edited or added nodes and arcs as "new"
+			- Also list all new nodes & arcs on the side and let user explicitly click them off as "seen"
+		- Send changes to server
+		- Locking to prevent multiple edits at the same time
+			- Share lock information
+		- Live updates
+	- more filters
