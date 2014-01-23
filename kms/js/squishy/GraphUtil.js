@@ -7,7 +7,7 @@
 
 
 // #############################################################################
-// BFS graph traversal of nodes
+// BFS traversal of nodes
 
 /**
  * Initializes and returns the state object used in GraphBFSNodes.
@@ -65,7 +65,7 @@ squishy.Graph.prototype.BFSNodes = function(visitFunc, graphBFSState) {
 
 
 // #############################################################################
-// BFS graph traversal of arcs
+// BFS traversal along all arcs
 
 /**
  * Initializes and returns the state object used in GraphBFSArcs.
@@ -102,9 +102,10 @@ squishy.Graph.prototype.BFSArcs = function(visitFunc, graphBFSState) {
     while (tailIdx < headIdx) {
         var nextNode = fringe[++tailIdx];                   // dequeue next node
         
-        // replace arc with outgoing arcs of "to" node
-        var childArcs = nextNode.arcsOut;
+        // add all arcs leading into and out of this node to the queue:
         
+        // first, add all outgoing arcs
+        var childArcs = nextNode.arcsOut;
         for (var j = 0; j < childArcs.length; ++j) {
             var childArc = childArcs[j];
             if (visited[childArc.arcid]) continue;
@@ -115,8 +116,25 @@ squishy.Graph.prototype.BFSArcs = function(visitFunc, graphBFSState) {
                 fringe[++headIdx] = this.nodes[childArc.to];
             }
         }
+        
+        // // then, add all incoming arcs
+        // childArcs = nextNode.arcsIn;
+        // for (var j = 0; j < childArcs.length; ++j) {
+            // var childArc = childArcs[j];
+            // if (visited[childArc.arcid]) continue;
+            // visited[childArc.arcid] = true;             // flag as visited
+//             
+            // if (visitFunc(childArc)) {
+                // // keep visiting
+                // fringe[++headIdx] = this.nodes[childArc.to];
+            // }
+        // }
     }
 };
+
+
+// #############################################################################
+// BFS graph traversal of arcs
 
 /**
  * Log all arcs to console. 

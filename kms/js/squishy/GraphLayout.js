@@ -14,10 +14,10 @@
  * Computes the position and size of all node rectangles and their arcs.
  */
 squishy.Graph.prototype.computeLayout = function() {
-    this.computeRanks();
+    var rankInfo = this.computeRanks();
     var virtualMap = this.createVirtualGraph();
-    var ordering = virtualMap.computeInRankOrder();
-    return virtualMap.computeInRankPosition(ordering);
+    var ordering = virtualMap.computeInRankOrder(rankInfo);
+    return virtualMap.computeInRankPosition(rankInfo, rankArrays);
 };
 
 
@@ -30,21 +30,12 @@ squishy.Graph.prototype.computeLayout = function() {
  * @private
  */
 squishy.Graph.prototype.computeRanks = function() {
-    // TODO: First group by tags, and then compute the inter-group and intra-group layouts separately
-    
     // we compute the tree and with it the node ranks.
-    this.computeRanksGreedily();
-    
-    // All other steps are unnecessary since we only have a single root (citation missing)
-    
-    // while ((arcBad = this.getNextBadArc(tree)) != null) {
-        // arcGood = this.getReplacementArc(arcBad, tree);
-        // tree.replaceEdge(arcBad, arcGood);
-    // }
-    // this.normalize();	// make sure, the root has rank 0
-    // this.balance();  // TODO: For edges with multiple feasible rank choices, choose the least crowded one
+    var rankInfo = this.computeRanksGreedily();
     
     this.logArcs("computeRanks (done)");
+	
+	return rankInfo;
 };
 
 /**
@@ -53,16 +44,13 @@ squishy.Graph.prototype.computeRanks = function() {
  * @private
  */
 squishy.Graph.prototype.computeRanksGreedily = function() {
-    this.NRankMin = 0;
-    this.NRankMax = 0;
-    this.initRanks();
+    var rankInfo = this.initRanks();
 	
 	// visitor function that moves the rank of every node down by the given amount of slack
 	var visitorFactory = function(_this, delta) {
 		return function (arc) {
-			var toNode = _this.nodes[arc.to];
-			toNode.rank += delta;
-			_this.NRankMax = Math.max(_this.NRankMax, toNode.rank);
+			var newRank = (rankInfo.Ranks[arc.to] += delta);
+			rankInfo.NRankMax = Math.max(_this.NRankMax, newRank);
 			return true;
 		};
 	};
@@ -80,79 +68,9 @@ squishy.Graph.prototype.computeRanksGreedily = function() {
     		this.BFSNodes(visitorFactory(this, -slack), bfsState);
     	}
     }
+    return rankInfo;
 };
 
-// /**
- // * @private
- // */
-// squishy.Graph.prototype.computeFeasibleTree = function() {
-    // this.NRankMin = 0;
-    // this.NRankMax = 0;
-    // this.initRanks();
-//     
-    // /** @const */ var nNodes = this.nodes.length;      // total node count
-    // var tree = { 
-    	// arcs : [],
-    	// nodes : {0:1},			// add root initially
-    	// size : 1
-   	// };
-//    	
-    // var _this = this;
-    // var leastAdjacentArc;
-    // var leastAdjacentArcSlack;
-    // var bfsCallback = function(nextArc) {
-        // var slack = _this.arcGetSlack(nextArc);
-//     	
-    	// // if (tree.nodes[nextArc.to]) {
-    		// // return true;		// node has already been added
-    	// // }
-//     	
-    	// // grow a tight tree
-        // if (slack === 0) {       // tight arc
-            // tree.arcs.push(nextArc);
-            // tree.nodes[nextArc.to] = 1;
-            // ++tree.size;
-            // return true;
-        // }
-//         
-        // // this arc is not tight -> But it's adjacent to the tree.
-        // if (slack < leastAdjacentArcSlack) {
-            // leastAdjacentArc = nextArc;
-            // leastAdjacentArcSlack = slack;
-            // console.log("leastAdjacentArcSlack: " + leastAdjacentArcSlack);
-        // }
-//         
-        // return false;
-    // };
-//     
-    // // start traversal
-    // var graphBFSState = this.BFSArcsInit();
-    // while (true)
-    // {
-        // // remember arc with least slack in incident fringe
-        // leastAdjacentArc = null;
-        // leastAdjacentArcSlack = 1e9;
-//         
-        // // grow tight tree
-        // this.BFSArcs(bfsCallback, graphBFSState);
-        // if (tree.size == nNodes) {
-            // break;
-        // }
-//         
-        // debugger;
-//         
-        // // adjust ranks to make the next edge tight
-        // var delta = leastAdjacentArcSlack;
-        // this.Root.rank += delta;
-        // for (var i = 0; i < tree.arcs.length; ++i) {
-            // var arc = tree.arcs[i];
-            // var newRank = (this.nodes[arc.to].rank += delta);
-            // _this.NRankMax = Math.max(_this.NRankMax, newRank);
-        // }
-    // }
-    // this.logArcs("computeFeasibleTree");
-    // return tree;
-// };
 
 /**
  * Produces an initial node ranking with breadth-first order.
@@ -161,13 +79,115 @@ squishy.Graph.prototype.computeRanksGreedily = function() {
  * @private
  */
 squishy.Graph.prototype.initRanks = function() {
-    this.Root.rank = this.NRankMin;     // set root rank to 0
+	// init ranks
+	var rankInfo = {
+		NRankMin : 0,
+		NRankMax : 0,
+		Ranks : squishy.createArray(this.nodes.length) 
+	};
+	rankInfo.Ranks[0] = 0;
     /** @const */ var _this = this;
     this.BFSNodes(function(nextArc) { 
-        var newRank = _this.nodes[nextArc.to].rank = _this.nodes[nextArc.from].rank+1;
-        _this.NRankMax = Math.max(_this.NRankMax, newRank);
+        var newRank = rankInfo.Ranks[nextArc.to] = rankInfo.Ranks[nextArc.from]+1;
+        rankInfo.NRankMax = Math.max(_this.NRankMax, newRank);
         return true;
     });
+};
+
+
+
+// #################################################################
+// DOT Simplex Network Algorithm
+
+/**
+ * Runs the Simplex Network algorithm on this graph and returns the "rank" of each node
+ * in an array, indexed by nodeindex.
+ * 
+ * Reference: Paper "A Technique for Drawing Directed Graphs" [1993]
+ * 
+ * @return Complex object: {Ranks, NRankMin, NRankMax}
+ */
+squishy.Graph.prototype.runSimplexNetwork = function() {
+	var rankInfo = this.initRanks();
+    
+    // feasible tree
+	this.computeFeasibleTree(simplex);
+	
+	// while ((arcBad = this.getNextBadArc(tree)) != null) {
+        // arcGood = this.getReplacementArc(arcBad, tree);
+        // tree.replaceEdge(arcBad, arcGood);
+    // }
+    // this.normalize();	// make sure, the root has rank 0
+    // this.balance();  // TODO: For edges with multiple feasible rank choices, choose the least crowded one
+};
+
+/**
+ * @private
+ */
+squishy.Graph.prototype.computeFeasibleTree = function(simplex) {
+    // compute 
+    /** @const */ var nNodes = this.nodes.length;      // total node count
+    var tree = { 
+    	arcs : [],
+    	nodes : {0:1}			// add root initially
+   	};
+   	
+    var _this = this;
+    var leastAdjacentArc;
+    var leastAdjacentArcSlack;
+    var bfsCallback = function(nextArc) {
+        var slack = _this.arcGetSlack(nextArc);
+    	
+    	// if (tree.nodes[nextArc.to]) {
+    		// return true;		// node has already been added
+    	// }
+    	
+    	// grow a tight tree
+        if (slack === 0) {       // tight arc
+            tree.arcs.push(nextArc);
+            tree.nodes[nextArc.to] = 1;
+            ++tree.size;
+            return true;
+        }
+        
+        // this arc is not tight -> But it's adjacent to the tree.
+        if (slack < leastAdjacentArcSlack) {
+            leastAdjacentArc = nextArc;
+            leastAdjacentArcSlack = slack;
+            console.log("leastAdjacentArcSlack: " + leastAdjacentArcSlack);
+        }
+        
+        return false;
+    };
+    
+    // start traversal
+    var graphBFSState = this.BFSArcsInit();
+    while (true)
+    {
+        // remember arc with least slack in incident fringe
+        leastAdjacentArc = null;
+        leastAdjacentArcSlack = 1e9;
+        
+        // grow tight tree
+        this.BFSArcs(bfsCallback, graphBFSState);
+        if (tree.size == nNodes) {
+            break;
+        }
+        
+        debugger;
+        
+        // adjust ranks to make the next edge tight
+        var delta = leastAdjacentArcSlack;
+        var newRank = (rankInfo.Ranks[this.Root.nodeindex] += delta);
+		_this.NRankMax = Math.max(_this.NRankMax, newRank);
+        for (var i = 0; i < tree.arcs.length; ++i) {
+            var arc = tree.arcs[i];
+            var newRank = (rankInfo.Ranks[arc.to] += delta);
+            _this.NRankMax = Math.max(_this.NRankMax, newRank);
+        }
+    }
+    this.logArcs("computeFeasibleTree");
+    return tree;
 };
 
 
@@ -228,10 +248,10 @@ squishy.Graph.prototype.createVirtualGraph = function() {
 /**
  * Computes in-rank order, based on the median positions of ancestors.
  */
-squishy.Graph.prototype.computeInRankOrder = function() {
+squishy.Graph.prototype.computeInRankOrder = function(rankInfo) {
     // First do a BFS for an initial ordering.
     // Returns "ranks" array and adds the "order" property to every node.
-    var ranks = squishy.createArray(this.NRankMax+1, []);     // one array per rank
+    var ranks = squishy.createArray(rankInfo.NRankMax+1, []);     // one array per rank
     var _this = this;
     
     // add root
@@ -240,7 +260,7 @@ squishy.Graph.prototype.computeInRankOrder = function() {
     
     this.BFSNodes(function(nextArc) {
         var node = _this.nodes[nextArc.to];
-        var nodesInRank = ranks[node.rank];
+        var nodesInRank = ranks[rankInfo.Ranks[node.nodeindex]];
         node.order = nodesInRank.length;
         nodesInRank.push(node);
         return true;
@@ -291,21 +311,21 @@ squishy.Graph.prototype.computeInRankOrder = function() {
  * 
  * @return An array of {x, y}, indicating the top-left position of each node.
  */
-squishy.Graph.prototype.computeInRankPosition = function(ranks, canvas) {
+squishy.Graph.prototype.computeInRankPosition = function(rankInfo, rankArrays) {
     var positions = [];
-    var y = 0;
-    for (var i = 0; i < ranks.length; ++i) {
-        var x = 0;
-        var rankNodes = ranks[i];
-        for (var j = 0; j < rankNodes.length; ++j) {
-            var node = rankNodes[j];
-            
-            x += this.layout.nodeSizeMax.x + this.layout.nodeSeparation.x;
-            
-            if (!node.virtual)
-            	positions[node.nodeindex] = [ x, y ];
+    var dx = this.layout.nodeSizeMax.x + this.layout.nodeSeparation.x;
+    var dy = this.layout.nodeSizeMax.y + this.layout.nodeSeparation.y;
+    
+    for (var i = 0; i < nodes.length; ++i) {
+    	var node = nodes[i];
+    	var order = node.order;
+    	var rank = rankInfo.Ranks[node.nodeindex];
+	
+		if (!node.virtual) {
+			var x = order * dx;
+        	var y = rank * dy;
+        	positions[node.nodeindex] = [ x, y ];
         }
-        y += this.layout.nodeSizeMax.y + this.layout.nodeSeparation.y;
     }
     return positions;
 };
