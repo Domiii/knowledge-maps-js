@@ -140,15 +140,14 @@ squishy.GraphUI.prototype.resetGraph = function() {
     this.mapEl.style.width = "0px";
     this.mapEl.style.height = "0px";
 
-    // reset selections
+    // reset mode & selections
+    this.enterMode(squishy.GraphUI.ActionMode.Default);
     this.selectNode(null);
     this.selectArc(null);
     this.selectTag(null);
-    this.enterMode(squishy.GraphUI.ActionMode.Default);
     
     // compute layout
-    var positions = this.positions = this.graph.computeLayout();
-    
+    var positions = this.graph.computeLayout();
     var layout = this.graph.layout;
     
     // add tags
@@ -198,7 +197,7 @@ squishy.GraphUI.prototype.resetGraph = function() {
         
         // Add line functionality
         var this_ = this;
-        line.onmousedown = function (evt) {
+        squishy.onClick(line, function (evt) {
         	evt = evt || window.event;
         	var line = event.target || event.srcElement;
             
@@ -210,7 +209,7 @@ squishy.GraphUI.prototype.resetGraph = function() {
             else {
                 this_.selectArc(arc);
             }
-        };
+        });
         
         // line.onmouseover = function(evt) { 
         	// evt = evt || window.event;
@@ -351,10 +350,8 @@ squishy.GraphUI.prototype.addNodeButton = function(node, x, y, w) {
         //evt = evt || window.event;
         button.graphui.selectNode(button.node);
     };
-    button.addEventListener("mousedown", showInfoHandler);
-    button.addEventListener("touchstart", showInfoHandler);
-    button.addEventListener("mouseover", showInfoHandler);
-    //button.onmouseover = showHandler;
+    squishy.onClick(button, showInfoHandler);
+    //button.addEventListener("mouseover", showInfoHandler);
     
 	this.mapEl.appendChild(button);
     button.graphui = this;
@@ -394,6 +391,9 @@ squishy.GraphUI.prototype.addNodeResponse = function(parent, newNode, newArcId) 
     
     // re-compute layout
     this.resetGraph();
+	
+	// select new node
+	this.selectNode(newNode);
 };
 
 
@@ -536,14 +536,6 @@ squishy.GraphUI.prototype.setTags = function(tags, targetEl) {
 squishy.GraphUI.prototype.addTag = function(tag, targetEl) {
     var tagEl = document.createElement("span");
     tagEl.className = "km_tag";
-    
-    // display HTML when hovering with the mouse or clicking it
-    var selectTagHandler = function(evt) {
-        //evt = evt || window.event;
-        tagEl.graphui.selectTag(tag);
-    };
-    tagEl.addEventListener("mousedown", selectTagHandler);
-    tagEl.addEventListener("touchstart", selectTagHandler);
     tagEl.graphui = this;
     
     // add text
@@ -555,6 +547,14 @@ squishy.GraphUI.prototype.addTag = function(tag, targetEl) {
     // add tag and whitespace to DOM, to avoid clumping together.
     targetEl.appendChild(tagEl);
     squishy.appendText(targetEl, " ");
+	
+    // display HTML when clicking it
+    var selectTagHandler = function(evt) {
+        //evt = evt || window.event;
+        tagEl.graphui.selectTag(tag);
+    };
+    
+    squishy.onClick(tagEl, selectTagHandler);
     
     return tagEl;
 };
@@ -592,6 +592,15 @@ squishy.GraphUI.prototype.enterMode = function(mode) {
     var oldMode = this.mode;
     
     
+};
+
+/**
+ * Enter a new mode to prevent 
+ *
+ * @param mode
+ */
+squishy.GraphUI.prototype.leaveCurrentMode = function() {
+    // TODO: 
 };
 
 // TODO: freeze object, but it's performance is currently bad in Chrome

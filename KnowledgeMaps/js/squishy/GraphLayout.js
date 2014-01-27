@@ -18,8 +18,8 @@
 squishy.Graph.prototype.computeLayout = function() {
     var ranks = this.computeRanks();
     //this.logArcs(ranks, "computeRanks");
-    //var virtualMap = this;
-    var virtualMap = this.createVirtualGraph(ranks);
+    var virtualMap = this;
+    //var virtualMap = this.createVirtualGraph(ranks);
     var rankArrays = virtualMap.computeInRankOrder(ranks);
     return virtualMap.computeInRankPosition(ranks, rankArrays);
 };
@@ -192,7 +192,7 @@ squishy.Graph.prototype.computeFeasibleTree = function(ranks) {
 
 
 // #################################################################
-// DOT Step #2: addVirtualNodes
+// DOT Step #2: Create virtual nodes
 
 /**
  * Creates a copy of the graph with virtual nodes so that every arc has unit length.

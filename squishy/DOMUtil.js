@@ -109,7 +109,7 @@ squishy.appendText = function(element, text) {
  
 
 // ##############################################################################################################
-// Mouse Events
+// Mouse & Touch Events
 
 /**
  * Copies "correctified" client x and y values into the given 2D target array.
@@ -143,6 +143,34 @@ squishy.getRelativeEventCoordinates = function(evt, target) {
 
 	target[0] = x;
 	target[1] = y;
+};
+
+/**
+ * Check whether touch functionality is supported.
+ */
+squishy.isTouchDevice = function() {
+	return 'ontouchstart' in window || 'msmaxtouchpoints' in window.navigator;
+};
+
+/**
+ * Triggers the given arguments on click or on touchend.
+ */
+squishy.onClick = function(element) {
+	// copy arguments
+	var callArgs = squishy.createArray(arguments.length-1);
+	for (var i = 1; i < arguments.length; ++i) {
+		callArgs[i-1] = arguments[i];
+	}
+	
+	// add click event
+	var clickArgs = ["click"].concat(callArgs);
+	element.addEventListener.apply(element, clickArgs);
+	
+	if (squishy.isTouchDevice()) {
+		// add touch event
+		var touchArgs = ["touchend"].concat(callArgs);
+		element.addEventListener.apply(element, touchArgs);
+	}
 };
 
 // ##############################################################################################################

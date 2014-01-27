@@ -57,6 +57,7 @@ squishy.Graph.prototype.BFSNodes = function(visitFunc, graphBFSState) {
             if (visitFunc.call(this, childArc)) {
                 // keep visiting
                 fringe[++headIdx] = this.nodes[childArc.to];
+				squishy.assert(this.nodes[childArc.to], "Arc " + childArc.arcid + " points to invalid node at index " + childArc.to);
             }
         }
     } while (tailIdx < headIdx);
@@ -101,7 +102,6 @@ squishy.Graph.prototype.BFSArcs = function(visitFunc, graphBFSState) {
     var tailIdx = -1;
     while (tailIdx < headIdx) {
         var nextNode = fringe[++tailIdx];                   // dequeue next node
-        
         // add all arcs leading into and out of this node to the queue:
         
         // first, add all outgoing arcs
