@@ -1,9 +1,24 @@
+Edu Bernard:
+    - Procedural knowledge
+    - infobesity
+    - Jenaplan
+
 TODO:
-	- Map zoom
-	- Jump to node
-	- Jump to region (e.g. all currently filtered nodes)
-	- Continued scrolling (take velocity from most recent mouse movement and damp over time)
-	- Correct in-rank ordering: Simplex Network Algorithm
+    - http://lifehacker.com/five-best-mind-mapping-tools-476534555
+    - https://www.google.com.tw/search?q=mind+map+moodle&oq=mind+map+moodle&aqs=chrome..69i57j0l5.5078j0j7&sourceid=chrome&espv=210&es_sm=93&ie=UTF-8
+    
+    
+	- Editing
+		- Recompute graph after editing
+		- Add node
+		- Add arc
+		- Show edited or added nodes and arcs as "new"
+			- Also list all new nodes & arcs on the side and let user explicitly click them off as "seen"
+		- Send changes to server
+		- Locking to prevent multiple edits at the same time
+			- Share lock information
+		- Live updates
+    - Flexble layout for all screen sizes
 	- Node states
 		- None
 		- Seen
@@ -17,14 +32,10 @@ TODO:
         <FIELD NAME="subtitlelanguage" TYPE="text" NOTNULL="true" ENUM="true" DEFAULT="none" ENUMVALUES="'none', 'en', 'zh', 'both'"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
-	- Editing
-		- Recompute graph after editing
-		- Add node
-		- Add arc
-		- Show edited or added nodes and arcs as "new"
-			- Also list all new nodes & arcs on the side and let user explicitly click them off as "seen"
-		- Send changes to server
-		- Locking to prevent multiple edits at the same time
-			- Share lock information
-		- Live updates
-	- more filters
+    - Nive-to-haves
+        - Map zoom: Zoom to point
+        - Continued scrolling (take velocity from most recent mouse movement and damp over time)
+        - Jump to node
+        - Jump to region (e.g. all currently filtered nodes)
+        - Correct in-rank positioning: Simplex Network Algorithm
+        - more filters

@@ -11,7 +11,7 @@
  */
 squishy.getCallerInfo = function() {
     try { throw new Error(''); } catch (err) {
-        var callerLine = err.stack.split("\n")[4];        // get line of caller
+        var callerLine = err.stack.split("\n")[3];        // get line of caller
         var index = callerLine.indexOf("at ");
         return callerLine.slice(index + 3, callerLine.length);
     }
@@ -113,9 +113,8 @@ Object.prototype.clone = function(deepCopy, newObj) {
   if (arguments.length === 0) {
     deepCopy = true;
   }
-  else if (arguments.length === 1) {
-    newObj = (this instanceof Array) ? [] : {};
-  }
+  
+  newObj = newObj || ((this instanceof Array) ? [] : {});
   
   for (var i in this) {
     if (deepCopy && typeof this[i] == "object") {

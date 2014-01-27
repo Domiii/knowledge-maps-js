@@ -3,7 +3,7 @@
  * A GraphGen provides methods to create random cycle-free directed graphs of arbitrary size.
  */
 squishy.GraphGen = function() {
-    this.allTags = ["tag1", "banana", "apple"];
+    this.allTags = ["tagapalooza1234567890", "sometag", "banana", "apple", "loremipsumloremipsumloremipsumloremipsum"];
 };
 
 /**

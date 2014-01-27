@@ -16,18 +16,14 @@
  * @param {Element} container The container that the line div should be added to.
  * @param {Array.<Number, Number>} from x and y coordinates of first point.
  * @param {Array.<Number, Number>} from x and y coordinates of second point.
- * @param {Color=} color The color of the line. (Default = black)
- * @param {Number=} width The stroke width of the line in pixels. (Default = 1)
+ * @param {Color=} color The color of the line. (Default = None)
+ * @param {Number=} thickness The stroke thickness of the line in pixels. (Default = None)
  */
-squishy.drawLine = function(container, from, to, color, width) {
+squishy.drawLine = function(container, from, to, color, thickness) {
 	var ax = from[0];
 	var ay = from[1];
 	var bx = to[0];
 	var by = to[1];
-    
-    // set defaults
-    color = color || "black";
-    width = width || 1;
     
     // compute counter-clockwise angle from the positive x-axis (in radians)
     var angle = Math.atan2(by-ay, bx-ax);
@@ -39,7 +35,15 @@ squishy.drawLine = function(container, from, to, color, width) {
     var length=Math.sqrt((ax-bx)*(ax-bx)+(ay-by)*(ay-by));
     var div = document.createElement("div");
     div.style.cssText = 
-    	"height:" + width + "px;width:" + length + "px;background-color:" + color + ";position:absolute;top:" + (ay) + "px;left:" + (ax) + "px;";
+    	"width:" + length + "px;" + ";position:absolute;top:" + (ay) + "px;left:" + (ax) + "px;";
+        
+    if (color) {
+        div.style.cssText += "background-color:" + color;
+    }
+    
+    if (thickness) {
+        div.style.cssText += "height:" + thickness + "px;";
+    }
     
 	// make sure, it stays at the correct origin
 	squishy.transformOrigin(div);
@@ -87,6 +91,21 @@ squishy.transformOrigin = function(targetEl, originX, originY) {
     
     targetEl.style.cssText += fullCSSString;
 };
+ 
+
+// ##############################################################################################################
+// Text
+
+/**
+ * Appends a new text node to the given target Element.
+ *
+ * @param {Element} element
+ * @param {String} text
+ */
+squishy.appendText = function(element, text) {
+    element.appendChild(document.createTextNode(text));
+};
+
  
 
 // ##############################################################################################################
@@ -216,6 +235,19 @@ squishy.loadImage = function(src, callback) {
         };
     }
     img.src = src;
+};
+
+/**
+ * Creates a new DOM element that has a background image and takes the image's size.
+ * @see http://stackoverflow.com/questions/15961824/css-how-to-set-container-size-equal-to-background-image-size
+ *
+ * @param {Element} elem 
+ */
+squishy.addBackgroundImage = function(elem, imgSrc) {
+    var img = document.createElement("img");
+    elem.style.cssText += "display:inline-block";
+    img.src = imgSrc;
+    elem.appendChild(img);
 };
 
 // ##############################################################################################################

@@ -10,26 +10,39 @@ squishy.UI = {};
  * of (possibly much) larger dimensions.
  * 
  * @param {Object} config The MapView component and settings.
- * @param {Element} [config.map] The underlying DOM element of the map.
- * @param {Element} [config.viewPort] The underlying DOM element of the viewPort (must contain map).
+ * @param {Element} [config.mapEl] The underlying DOM element of the map.
+ * @param {Element} [config.viewPortEl] The underlying DOM element of the viewPort (must contain map).
  * @param {Array.<Number, Number>} [config.viewPortPosition] A 2D array, representing the current top and left px coordinates of the viewPort, relative to the map.
+ * @param {Number=} [config.zoomStep] The factor to be applied at every step. (Default: 2)
+ * @param {Number=} [config.scrollAcceleration] Acceleration factor of ballistic scrolling. (Default: 10)
+ * @param {Number=} [config.scrollDamping] Velocity damping of ballistic scrolling. (Default: 1)
  */
 squishy.UI.MapView = function(config) {
     // shallow-copy config options into this object
     config.clone(false, this);
     
-    squishy.assert(config.map, "config.map is not defined.");
-    squishy.assert(config.viewPort, "config.viewPort is not defined.");
-    squishy.assert(config.map.parentNode == config.viewPort, "config.viewPort must be parent of config.map.");
+    squishy.assert(config.mapEl, "config.map is not defined.");
+    squishy.assert(config.viewPortEl, "config.viewPortEl is not defined.");
+    squishy.assert(config.mapEl.parentNode == config.viewPortEl, "config.viewPortEl must be parent of config.map.");
     
-    this.map.mapView = this;
+    // set zoom parameters
+    this.zoomScale = 1;
+    this.zoomStep = this.zoomStep || 2;
+    
+    // set scroll parameters
+    this.scrollAcceleration = this.scrollAcceleration || 10;
+    this.scrollDamping = this.scrollDamping || 1;
+    this.scrollVelocity = 0;
+    
+    // associate the view with the map
+    this.mapEl.mapView = this;
     
     // don't display the clipped map area
-    this.viewPort.style.overflow = "hidden";
+    this.viewPortEl.style.overflow = "hidden";
     
     // viewPort must properly contain the absolute map element
-    this.viewPort.style.position = "relative";
-    this.map.style.position = "absolute";
+    this.viewPortEl.style.position = "relative";
+    this.mapEl.style.position = "absolute";
     
     // initialize position and clipping  of the map element
     this.moveTo(config.viewPortPosition);
@@ -74,10 +87,10 @@ squishy.UI.MapView.prototype.updateViewPort = function() {
     /** @const */ var minX = 0;
     /** @const */ var minY = 0;
     
-    var width = this.map.offsetWidth;
-    var height = this.map.offsetHeight;
-    var viewWidth = this.viewPort.offsetWidth;
-    var viewHeight = this.viewPort.offsetHeight;
+    var width = this.mapEl.offsetWidth;
+    var height = this.mapEl.offsetHeight;
+    var viewWidth = this.viewPortEl.offsetWidth;
+    var viewHeight = this.viewPortEl.offsetHeight;
     
     var left = this.viewPortPosition[0];
     var top = this.viewPortPosition[1];
@@ -91,14 +104,15 @@ squishy.UI.MapView.prototype.updateViewPort = function() {
     top = Math.max(0, top);
     
     // update position
-    this.map.style.left = -left + "px";
-    this.map.style.top = -top + "px";
+    this.mapEl.style.left = -left + "px";
+    this.mapEl.style.top = -top + "px";
+    
     
     this.viewPortPosition[0] = left;
     this.viewPortPosition[1] = top;
     
     //// set clipping rectangle
-    //this.map.style.clip = "rect(" + top + "px," + right + "px," + bottom + "px," + left + "px)";
+    //this.mapEl.style.clip = "rect(" + top + "px," + right + "px," + bottom + "px," + left + "px)";
 };
 
 // #############################################################################
@@ -119,10 +133,10 @@ squishy.UI.MapView.prototype.initMap = function() {
     	var _this = this;
     	
         // start dragging/touching
-        this.viewPort.addEventListener('mousedown',  function(evt) { _this.onTouchStart(evt); } , false);
+        this.viewPortEl.addEventListener('mousedown',  function(evt) { _this.onTouchStart(evt); } , false);
         
         // move about
-        this.viewPort.addEventListener('mousemove',  function(evt) { if (_this.dragAnchor.active) _this.onTouchUpdate(evt); } , false);
+        this.viewPortEl.addEventListener('mousemove',  function(evt) { if (_this.dragAnchor.active) _this.onTouchUpdate(evt); } , false);
         
         // stop dragging/touching
         document.addEventListener('mouseup',  function(evt) { _this.onTouchStop(evt); } , false);
@@ -196,6 +210,69 @@ squishy.UI.MapView.prototype.getPositionDelta = function(evt, target) {
     target[1] = this.dragAnchor.pos[1] - target[1];
 };
 
+
+// #############################################################################
+// Zooming
+
+// TODO: Zoom in on a specific point.
+
+/**
+ * Min zoom scale is the greatest scale that allows the viewPort to entirely contain the underlying element.
+ */
+squishy.UI.MapView.prototype.getMinZoomScale = function() {
+    var width = this.mapEl.offsetWidth;
+    var height = this.mapEl.offsetHeight;
+    var viewWidth = this.viewPortEl.offsetWidth;
+    var viewHeight = this.viewPortEl.offsetHeight;
+    
+    // determine how many steps we must take to make sure that the max ratio is <= 1
+    var wRatio = width/viewWidth;
+    var hRatio = height/viewHeight;
+    var maxRatio = Math.max(wRatio, hRatio);
+    
+    var zoomStepInv = 1/this.zoomStep;
+    var scale = this.zoomScale;
+    var i;
+    for (i = 0; scale * maxRatio > 1; ++i) {
+        scale *= zoomStepInv;
+    }
+    
+    return scale;
+};
+
+/**
+ * Don't allow magnification.
+ */
+squishy.UI.MapView.prototype.getMaxZoomScale = function() {
+    return 1;
+};
+
+squishy.UI.MapView.prototype.setZoomScale = function(zoomScale) {
+    // make sure, zoom scale is within bounds
+    zoomScale = Math.min(zoomScale, this.getMaxZoomScale());
+    zoomScale = Math.max(zoomScale, this.getMinZoomScale());
+    
+    // move to current position in the new zoom level
+    var delta = this.zoomScale - zoomScale;
+    if (delta < 0) delta = 1 - delta;
+    
+    // TODO: Consider sub-pixel accuracy?
+    this.viewPortPosition[0] *= delta;
+    this.viewPortPosition[1] *= delta;
+    this.updateViewPort();
+    
+    // update zoom scale
+    squishy.transformScale(this.mapEl, zoomScale, zoomScale);
+    this.zoomScale = zoomScale;
+};
+
+squishy.UI.MapView.prototype.zoomIn = function() {
+    this.setZoomScale(this.zoomScale * this.zoomStep);
+};
+
+squishy.UI.MapView.prototype.zoomOut = function() {
+    this.setZoomScale(this.zoomScale / this.zoomStep);
+};
 
 
 // #############################################################################

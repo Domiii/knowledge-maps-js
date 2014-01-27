@@ -35,35 +35,49 @@
 
     <!--KnowledgeMap container-->
     <div id="km_cont">
-    	<!--KnowledgeMap viewport-->
-        <div id="km_viewPort" style="width:500px; height:500px; position:relative; overflow:hidden; float:left; border-width:1px; border-style:solid;">
-    		<!--Actual KnowledgeMap-->
-	        <div id="km_map" style="">
-	        </div>
-        </div>
-        <div style="float:left; width:320px; margin-left:30px;">
-            <u><b>All tags</b></u>
-            <div id="km_all_tags" class="km_tag_box" style="width:100%; height:40px; border-width:1px; border-style:solid; margin-bottom:30px;">
+        <div id="" style="float:left; border-width:1px; border-style:solid;">
+            <!--Toolbar has some commonly used buttons-->
+            <div id="km_toolbar" style="width:100%;display:inline-block;background-color:#eeeeee">
+                
             </div>
+            <div style="position:relative;float:top;width:500px;">
+                <!--KnowledgeMap viewport-->
+                <div id="km_viewPort" style="width:100%; height:500px; float:left; overflow:hidden; ">
+                    <!--Actual KnowledgeMap-->
+                    <div id="km_map" style="">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Graph & node info panels-->
+        <div style="float:left; width:320px; margin-left:30px;">
+            <!--Node info-->
             <div id="km_node_cont" class="km_node_cont" style="height:100%; margin-bottom:10px; border-width:1px; border-style:solid;">
                 <div id="km_node_title" style="font:bold 18px arial;">
                     title
                 </div>
-                <div id="km_node_info" style="height:200px; border-width:1px; border-style:solid; margin-bottom:30px;">
+                <div id="km_node_info" style="height:200px; border-width:1px; border-style:solid; margin-bottom:10px;">
                     info
                 </div>
                 <u>Node Tags</u>
-                <div id="km_node_tags" class="km_tag_box" style="height:40px; ">
+                <div id="km_node_tags" class="km_tag_box" style="height:40px; overflow-y:scroll; ">
                 </div>
+                <!-- <u>Node Actions</u>
+                <div id="km_node_tags" class="km_tag_box" style="height:40px; overflow-y:scroll; ">
+                </div> -->
+            </div>
+            <!--List of all tags-->
+            <u><b>All tags</b></u>
+            <div id="km_all_tags" class="km_tag_box" style="width:100%; height:80px; border-width:1px; border-style:solid; margin-bottom:10px; overflow-y:scroll;">
             </div>
         </div>
     </div>
     
     <script type="text/javascript">
         // create random graph
-        var nRanks = 6;
+        var nRanks = 3;
         var nWidth = 3;
-        var nChance = .1;
+        var nChance = 0.4;
         var kmGraph = (new squishy.GraphGen()).genGraph(nRanks, nRanks, nWidth, nWidth, nChance);
         
         // assign layout to graph
@@ -77,13 +91,13 @@
                 "x" : 50,
                 "y" : 50
             },
-            font : "10px verdana",
-            arcColor : "red"
+            font : "10px verdana"
         };
         
         // get KnowledgeMap DOM elements
         var kmContEl = document.getElementById("km_cont");
         var kmViewPortEl = document.getElementById("km_viewPort");
+        var kmToolbarEl = document.getElementById("km_toolbar");
         var kmMapEl = document.getElementById("km_map");
         var kmAllTagsEl = document.getElementById("km_all_tags");
         var kmNodeTitleEl = document.getElementById("km_node_title");
@@ -92,14 +106,15 @@
         
         // create MapView for scrolling & zooming
         var cfg = {
-            map : kmMapEl,
-            viewPort : kmViewPortEl,
+            mapEl : kmMapEl,
+            viewPortEl : kmViewPortEl,
             viewPortPosition : [0, 0]
         };
         var mapView = new squishy.UI.MapView(cfg);
     
         // render graph to map element
-        var graphUI = new squishy.GraphUI(kmGraph, kmViewPortEl, kmMapEl, kmAllTagsEl, kmNodeTitleEl, kmNodeInfoEl, kmNodeTagsEl);
+        var backend = new squishy.GraphUI.DefaultBackend();
+        var graphUI = new squishy.GraphUI(kmGraph, kmViewPortEl, kmMapEl, mapView, kmToolbarEl, kmAllTagsEl, kmNodeTitleEl, kmNodeInfoEl, kmNodeTagsEl, backend);
         
     </script>
 </body>

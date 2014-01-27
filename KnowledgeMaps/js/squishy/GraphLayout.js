@@ -17,7 +17,7 @@
  */
 squishy.Graph.prototype.computeLayout = function() {
     var ranks = this.computeRanks();
-    this.logArcs(ranks, "computeRanks");
+    //this.logArcs(ranks, "computeRanks");
     //var virtualMap = this;
     var virtualMap = this.createVirtualGraph(ranks);
     var rankArrays = virtualMap.computeInRankOrder(ranks);
@@ -112,7 +112,7 @@ squishy.Graph.prototype.runSimplexNetwork = function() {
 	var ranks = this.initRanks();
     
     // feasible tree
-	this.computeFeasibleTree(ranks);
+	var tree = this.computeFeasibleTree(ranks);
 	
 	// while ((arcBad = this.getNextBadArc(tree)) != null) {
         // arcGood = this.getReplacementArc(arcBad, tree);
@@ -219,7 +219,7 @@ squishy.Graph.prototype.createVirtualGraph = function(ranks) {
             // insert (len-1) virtual nodes
             var last = fromNode;
             for (var k = 1; k < arcLen; ++k) {
-                last = virtualGraph.addNode(last, arc.weight, arc.arcid);
+                last = virtualGraph.addNode(last, { title : "virtual node" }, arc.weight, arc.arcid);
 				ranks[last.nodeindex] = ranks[fromNode.nodeindex] + k;		// add node rank
                 last.virtual = 1;
             }
